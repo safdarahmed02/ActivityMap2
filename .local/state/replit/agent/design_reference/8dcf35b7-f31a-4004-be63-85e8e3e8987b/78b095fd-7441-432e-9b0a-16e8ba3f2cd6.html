@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Heatmap Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        'heatmap': {
+                            0: '#f0fdf4',
+                            1: '#bbf7d0',
+                            2: '#86efac',
+                            3: '#4ade80',
+                            4: '#22c55e',
+                            5: '#16a34a',
+                            6: '#15803d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-50 font-inter">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Heatmap Tracker</h1>
+                <p class="text-gray-600 text-sm">Track your daily progress across different areas</p>
+            </div>
+            <button id="downloadBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Download PNG
+            </button>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <div class="flex h-screen">
+        <!-- @COMPONENT: Sidebar -->
+        <aside class="w-80 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Topics</h2>
+                    <button id="addTopicBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- @MAP: topics.map(topic => ( -->
+                <div class="space-y-2" id="topicsList">
+                    <div class="topic-item bg-emerald-50 border border-emerald-200 p-3 rounded-lg cursor-pointer hover:bg-emerald-100 transition-colors active" data-topic="coding">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-gray-900" data-mock="true">Coding</h3>
+                                <p class="text-sm text-gray-600" data-mock="true">hours</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-emerald-700" data-mock="true">47h</div>
+                                <div class="text-xs text-gray-500" data-mock="true">this week</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="topic-item bg-gray-50 border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" data-topic="reading">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-gray-900" data-mock="true">Reading</h3>
+                                <p class="text-sm text-gray-600" data-mock="true">pages</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-700" data-mock="true">124</div>
+                                <div class="text-xs text-gray-500" data-mock="true">this week</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="topic-item bg-gray-50 border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" data-topic="exercise">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-gray-900" data-mock="true">Exercise</h3>
+                                <p class="text-sm text-gray-600" data-mock="true">minutes</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-700" data-mock="true">320</div>
+                                <div class="text-xs text-gray-500" data-mock="true">this week</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+            
+            <!-- @STATE: selectedTopic: string, currentValue: number -->
+            <div class="p-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Quick Add</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                        <input type="number" id="valueInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="0" data-mock="true">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" id="dateInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" data-mock="true">
+                    </div>
+                    <button id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                        Add Entry
+                    </button>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 p-6 overflow-auto">
+            <div class="max-w-6xl mx-auto">
+                <!-- Current Topic Header -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900" id="currentTopicTitle" data-mock="true">Coding Progress</h2>
+                            <p class="text-gray-600" data-mock="true">Track your daily coding hours</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-emerald-600" data-mock="true">8.5h</div>
+                            <div class="text-sm text-gray-500" data-mock="true">today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-600">
+                            <span data-mock="true">347 contributions</span> in the last year
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span>Less</span>
+                            <div class="flex gap-1">
+                                <div class="w-3 h-3 rounded-sm bg-gray-200"></div>
+                                <div class="w-3 h-3 rounded-sm bg-emerald-100"></div>
+                                <div class="w-3 h-3 rounded-sm bg-emerald-300"></div>
+                                <div class="w-3 h-3 rounded-sm bg-emerald-500"></div>
+                                <div class="w-3 h-3 rounded-sm bg-emerald-700"></div>
+                            </div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap Container -->
+                <div class="bg-white rounded-xl border border-gray-200 p-6" id="heatmapContainer">
+                    <!-- Month Headers -->
+                    <div class="grid grid-cols-12 gap-1 mb-2 text-xs text-gray-500 font-medium">
+                        <div data-mock="true">Jan</div>
+                        <div data-mock="true">Feb</div>
+                        <div data-mock="true">Mar</div>
+                        <div data-mock="true">Apr</div>
+                        <div data-mock="true">May</div>
+                        <div data-mock="true">Jun</div>
+                        <div data-mock="true">Jul</div>
+                        <div data-mock="true">Aug</div>
+                        <div data-mock="true">Sep</div>
+                        <div data-mock="true">Oct</div>
+                        <div data-mock="true">Nov</div>
+                        <div data-mock="true">Dec</div>
+                    </div>
+                    
+                    <!-- Heatmap Grid -->
+                    <div class="flex gap-1">
+                        <!-- Day Labels -->
+                        <div class="flex flex-col gap-1 text-xs text-gray-500 font-medium mr-2">
+                            <div class="h-3"></div>
+                            <div data-mock="true">Mon</div>
+                            <div class="h-3"></div>
+                            <div data-mock="true">Wed</div>
+                            <div class="h-3"></div>
+                            <div data-mock="true">Fri</div>
+                            <div class="h-3"></div>
+                        </div>
+                        
+                        <!-- Calendar Grid -->
+                        <div class="grid grid-cols-53 gap-1" id="heatmapGrid">
+                            <!-- @MAP: Array(371).fill(0).map((_, index) => ( -->
+                            <!-- Week 1 -->
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-gray-200 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="0" data-date="2024-01-01" title="No data"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-100 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="1" data-date="2024-01-02" title="1 hour on Jan 2"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-300 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="3" data-date="2024-01-03" title="3 hours on Jan 3"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-500 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="5" data-date="2024-01-04" title="5 hours on Jan 4"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-200 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="2" data-date="2024-01-05" title="2 hours on Jan 5"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="8" data-date="2024-01-06" title="8 hours on Jan 6"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-gray-200 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="0" data-date="2024-01-07" title="No data"></div>
+                            
+                            <!-- Week 2 -->
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-300 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="3" data-date="2024-01-08" title="3 hours on Jan 8"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-500 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="6" data-date="2024-01-09" title="6 hours on Jan 9"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-600 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="7" data-date="2024-01-10" title="7 hours on Jan 10"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-200 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="2" data-date="2024-01-11" title="2 hours on Jan 11"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-400 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="4" data-date="2024-01-12" title="4 hours on Jan 12"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-100 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="1" data-date="2024-01-13" title="1 hour on Jan 13"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-gray-200 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="0" data-date="2024-01-14" title="No data"></div>
+                            
+                            <!-- Additional weeks with varied data patterns... -->
+                            <!-- Week 3-52 would be generated similarly with varied intensities -->
+                            <!-- This is a representative sample showing the pattern -->
+                            
+                            <!-- Recent weeks with more activity -->
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="9" data-date="2024-12-16" title="9 hours on Dec 16"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-600 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="7" data-date="2024-12-17" title="7 hours on Dec 17"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-700 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="8" data-date="2024-12-18" title="8 hours on Dec 18"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-500 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="5" data-date="2024-12-19" title="5 hours on Dec 19"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-600 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="6" data-date="2024-12-20" title="6 hours on Dec 20"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-400 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="4" data-date="2024-12-21" title="4 hours on Dec 21"></div>
+                            <div class="heatmap-cell w-3 h-3 rounded-sm bg-emerald-300 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition-all" data-value="3" data-date="2024-12-22" title="3 hours on Dec 22"></div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-2xl font-bold text-gray-900" data-mock="true">347</div>
+                        <div class="text-sm text-gray-600" data-mock="true">Total this year</div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-2xl font-bold text-gray-900" data-mock="true">47</div>
+                        <div class="text-sm text-gray-600" data-mock="true">This week</div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-2xl font-bold text-gray-900" data-mock="true">8.5</div>
+                        <div class="text-sm text-gray-600" data-mock="true">Today</div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-2xl font-bold text-gray-900" data-mock="true">24</div>
+                        <div class="text-sm text-gray-600" data-mock="true">Current streak</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+
+    <!-- @COMPONENT: AddTopicModal -->
+    <div id="addTopicModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Topic</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Topic Name</label>
+                    <input type="text" id="topicNameInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="e.g., Meditation, Writing">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Unit of Measurement</label>
+                    <input type="text" id="unitInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="e.g., hours, minutes, pages, reps">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button id="cancelTopicBtn" class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
+                    <button id="createTopicBtn" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Create Topic</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AddTopicModal -->
+
+    <!-- @COMPONENT: EditEntryModal -->
+    <div id="editEntryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Entry</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input type="date" id="editDateInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                    <input type="number" id="editValueInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="0">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button id="cancelEditBtn" class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
+                    <button id="saveEditBtn" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: EditEntryModal -->
+
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // @STATE: Application state management
+            let currentTopic = 'coding';
+            let topics = {
+                'coding': { name: 'Coding', unit: 'hours', data: {} },
+                'reading': { name: 'Reading', unit: 'pages', data: {} },
+                'exercise': { name: 'Exercise', unit: 'minutes', data: {} }
+            };
+
+            // Initialize with sample data
+            function initializeSampleData() {
+                // Sample data for coding
+                const codingData = {};
+                const startDate = new Date('2024-01-01');
+                for (let i = 0; i < 365; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+                    const dateStr = date.toISOString().split('T')[0];
+                    
+                    // Simulate varied activity with some patterns
+                    const weekday = date.getDay();
+                    let value = 0;
+                    
+                    if (weekday >= 1 && weekday <= 5) { // Weekdays
+                        value = Math.floor(Math.random() * 9); // 0-8 hours
+                    } else if (Math.random() > 0.7) { // Some weekend activity
+                        value = Math.floor(Math.random() * 4); // 0-3 hours
+                    }
+                    
+                    if (value > 0) {
+                        codingData[dateStr] = value;
+                    }
+                }
+                topics.coding.data = codingData;
+                
+                // Save to localStorage
+                localStorage.setItem('heatmapData', JSON.stringify(topics));
+            }
+
+            // Load data from localStorage
+            function loadData() {
+                const saved = localStorage.getItem('heatmapData');
+                if (saved) {
+                    topics = JSON.parse(saved);
+                } else {
+                    initializeSampleData();
+                }
+            }
+
+            // Save data to localStorage
+            function saveData() {
+                localStorage.setItem('heatmapData', JSON.stringify(topics));
+            }
+
+            // Get color class based on value
+            function getColorClass(value, maxValue) {
+                if (value === 0) return 'bg-gray-200';
+                
+                const ratio = value / Math.max(maxValue, 1);
+                if (ratio <= 0.2) return 'bg-emerald-100';
+                if (ratio <= 0.4) return 'bg-emerald-200';
+                if (ratio <= 0.6) return 'bg-emerald-400';
+                if (ratio <= 0.8) return 'bg-emerald-500';
+                return 'bg-emerald-700';
+            }
+
+            // Update heatmap display
+            function updateHeatmap() {
+                const topic = topics[currentTopic];
+                if (!topic) return;
+
+                const data = topic.data;
+                const maxValue = Math.max(...Object.values(data), 1);
+
+                // Update topic title
+                document.getElementById('currentTopicTitle').textContent = `${topic.name} Progress`;
+                
+                // Update today's value
+                const today = new Date().toISOString().split('T')[0];
+                const todayValue = data[today] || 0;
+                document.querySelector('.text-2xl.font-bold.text-emerald-600').textContent = `${todayValue}${topic.unit.charAt(0)}`;
+
+                // Update heatmap cells
+                const cells = document.querySelectorAll('.heatmap-cell');
+                cells.forEach(cell => {
+                    const date = cell.getAttribute('data-date');
+                    const value = data[date] || 0;
+                    
+                    // Remove all color classes
+                    cell.className = cell.className.replace(/bg-\w+-\d+/g, '');
+                    
+                    // Add appropriate color class
+                    cell.classList.add(getColorClass(value, maxValue));
+                    cell.setAttribute('data-value', value);
+                    cell.setAttribute('title', value > 0 ? `${value} ${topic.unit} on ${date}` : `No data on ${date}`);
+                });
+
+                // Update statistics
+                const totalThisYear = Object.values(data).reduce((sum, val) => sum + val, 0);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                const thisWeek = Object.entries(data)
+                    .filter(([date]) => new Date(date) >= weekAgo)
+                    .reduce((sum, [, val]) => sum + val, 0);
+
+                document.querySelectorAll('[data-mock="true"]').forEach(el => {
+                    if (el.textContent === '347') el.textContent = totalThisYear;
+                    if (el.textContent === '47') el.textContent = thisWeek;
+                });
+            }
+
+            // Update topics list
+            function updateTopicsList() {
+                const container = document.getElementById('topicsList');
+                container.innerHTML = '';
+
+                Object.entries(topics).forEach(([key, topic]) => {
+                    const data = topic.data;
+                    const weekTotal = Object.entries(data)
+                        .filter(([date]) => {
+                            const weekAgo = new Date();
+                            weekAgo.setDate(weekAgo.getDate() - 7);
+                            return new Date(date) >= weekAgo;
+                        })
+                        .reduce((sum, [, val]) => sum + val, 0);
+
+                    const div = document.createElement('div');
+                    div.className = `topic-item p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${key === currentTopic ? 'bg-emerald-50 border border-emerald-200' : 'bg-gray-50 border border-gray-200'}`;
+                    div.setAttribute('data-topic', key);
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-gray-900">${topic.name}</h3>
+                                <p class="text-sm text-gray-600">${topic.unit}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium ${key === currentTopic ? 'text-emerald-700' : 'text-gray-700'}">${weekTotal}${topic.unit.charAt(0)}</div>
+                                <div class="text-xs text-gray-500">this week</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    div.addEventListener('click', () => {
+                        currentTopic = key;
+                        updateTopicsList();
+                        updateHeatmap();
+                    });
+                    
+                    container.appendChild(div);
+                });
+            }
+
+            // Modal management
+            function showModal(modalId) {
+                document.getElementById(modalId).classList.remove('hidden');
+                document.getElementById(modalId).classList.add('flex');
+            }
+
+            function hideModal(modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+                document.getElementById(modalId).classList.remove('flex');
+            }
+
+            // Event listeners
+            document.getElementById('addTopicBtn').addEventListener('click', () => {
+                showModal('addTopicModal');
+            });
+
+            document.getElementById('cancelTopicBtn').addEventListener('click', () => {
+                hideModal('addTopicModal');
+                document.getElementById('topicNameInput').value = '';
+                document.getElementById('unitInput').value = '';
+            });
+
+            document.getElementById('createTopicBtn').addEventListener('click', () => {
+                const name = document.getElementById('topicNameInput').value.trim();
+                const unit = document.getElementById('unitInput').value.trim();
+                
+                if (name && unit) {
+                    const key = name.toLowerCase().replace(/\s+/g, '_');
+                    topics[key] = { name, unit, data: {} };
+                    currentTopic = key;
+                    
+                    saveData();
+                    updateTopicsList();
+                    updateHeatmap();
+                    hideModal('addTopicModal');
+                    
+                    document.getElementById('topicNameInput').value = '';
+                    document.getElementById('unitInput').value = '';
+                }
+            });
+
+            document.getElementById('submitBtn').addEventListener('click', () => {
+                const value = parseFloat(document.getElementById('valueInput').value);
+                const date = document.getElementById('dateInput').value;
+                
+                if (!isNaN(value) && date && value >= 0) {
+                    topics[currentTopic].data[date] = value;
+                    saveData();
+                    updateHeatmap();
+                    
+                    document.getElementById('valueInput').value = '';
+                    document.getElementById('dateInput').value = '';
+                }
+            });
+
+            // Heatmap cell click events
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('heatmap-cell')) {
+                    const date = e.target.getAttribute('data-date');
+                    const currentValue = topics[currentTopic].data[date] || 0;
+                    
+                    document.getElementById('editDateInput').value = date;
+                    document.getElementById('editValueInput').value = currentValue;
+                    showModal('editEntryModal');
+                }
+            });
+
+            document.getElementById('cancelEditBtn').addEventListener('click', () => {
+                hideModal('editEntryModal');
+            });
+
+            document.getElementById('saveEditBtn').addEventListener('click', () => {
+                const date = document.getElementById('editDateInput').value;
+                const value = parseFloat(document.getElementById('editValueInput').value);
+                
+                if (!isNaN(value) && value >= 0) {
+                    if (value === 0) {
+                        delete topics[currentTopic].data[date];
+                    } else {
+                        topics[currentTopic].data[date] = value;
+                    }
+                    saveData();
+                    updateHeatmap();
+                }
+                hideModal('editEntryModal');
+            });
+
+            // Download functionality
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                const container = document.getElementById('heatmapContainer');
+                html2canvas(container, {
+                    backgroundColor: '#ffffff',
+                    scale: 2
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `${topics[currentTopic].name}_heatmap.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            });
+
+            // Set today's date as default
+            document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+
+            // Initialize application
+            loadData();
+            updateTopicsList();
+            updateHeatmap();
+        })();
+    </script>
+</body>
+</html>
