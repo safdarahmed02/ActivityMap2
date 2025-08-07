@@ -1,48 +1,38 @@
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { Topic } from "@shared/schema";
 
 interface AddTopicModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (topicId: string) => void;
+  onCreateTopic: (data: { name: string; unit: string }) => Promise<Topic>;
 }
 
-export function AddTopicModal({ isOpen, onClose, onSuccess }: AddTopicModalProps) {
+export function AddTopicModal({ isOpen, onClose, onSuccess, onCreateTopic }: AddTopicModalProps) {
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
 
-  const createTopicMutation = useMutation({
-    mutationFn: async (data: { name: string; unit: string }) => {
-      const response = await apiRequest("POST", "/api/topics", {
-        name: data.name,
-        unit: data.unit,
-        data: {}
-      });
-      return response.json();
-    },
-    onSuccess: (topic) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
-      toast({ title: "Topic created successfully" });
-      onSuccess(topic.id);
-      setName("");
-      setUnit("");
-    },
-    onError: () => {
-      toast({ title: "Failed to create topic", variant: "destructive" });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && unit.trim()) {
-      createTopicMutation.mutate({ name: name.trim(), unit: unit.trim() });
+    if (name.trim() && unit.trim() && !isCreating) {
+      setIsCreating(true);
+      try {
+        const topic = await onCreateTopic({ name: name.trim(), unit: unit.trim() });
+        onSuccess(topic.id);
+        setName("");
+        setUnit("");
+      } catch (error) {
+        // Error is handled in parent component
+      } finally {
+        setIsCreating(false);
+      }
     }
   };
 
@@ -88,9 +78,9 @@ export function AddTopicModal({ isOpen, onClose, onSuccess }: AddTopicModalProps
             <Button
               type="submit"
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={createTopicMutation.isPending || !name.trim() || !unit.trim()}
+              disabled={isCreating || !name.trim() || !unit.trim()}
             >
-              {createTopicMutation.isPending ? "Creating..." : "Create Topic"}
+              {isCreating ? "Creating..." : "Create Topic"}
             </Button>
           </div>
         </form>

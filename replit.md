@@ -1,8 +1,8 @@
 # Overview
 
-This is a full-stack web application called "Heatmap Tracker" that allows users to track their daily progress across different activities through GitHub-style heatmap visualizations. Users can create topics (like coding hours, exercise minutes, reading pages) and log daily values, which are then displayed as interactive heatmaps showing activity patterns over time.
+This is a client-side web application called "Heatmap Tracker" optimized for Vercel deployment. It allows users to track their daily progress across different activities through GitHub-style heatmap visualizations. Users can create topics (like coding hours, exercise minutes, reading pages) and log daily values, which are then displayed as interactive heatmaps showing activity patterns over time.
 
-The application features a clean, modern interface with a sidebar for topic management and a main area displaying the heatmap visualization with statistics and quick-add functionality.
+The application features a clean, modern interface with a sidebar for topic management and a main area displaying the heatmap visualization with statistics and quick-add functionality. All data is stored locally in the browser using localStorage, making it perfect for personal use and Vercel's static hosting.
 
 # User Preferences
 
@@ -13,43 +13,28 @@ Preferred communication style: Simple, everyday language.
 ## Frontend Architecture
 - **Framework**: React 18 with TypeScript, using Vite as the build tool and development server
 - **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack Query (React Query) for server state management and data fetching
+- **State Management**: React useState/useEffect hooks for local state management
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
-- **Styling**: Tailwind CSS with CSS custom properties for theming
+- **Styling**: Tailwind CSS with CSS custom properties for dark theming
 - **Data Visualization**: D3.js for rendering the heatmap charts
 
-## Backend Architecture
-- **Runtime**: Node.js with Express.js framework
-- **API Design**: RESTful API with JSON responses
-- **Data Storage**: In-memory storage with sample data initialization (development setup)
-- **Database ORM**: Drizzle ORM configured for PostgreSQL (production-ready schema)
-- **Validation**: Zod schemas for request/response validation
-
 ## Data Storage Solutions
-- **Development**: MemStorage class providing in-memory data persistence with sample data
-- **Production**: PostgreSQL database with Drizzle ORM schema defining topics table
-- **Database Schema**: Topics table with id, name, unit, and JSONB data fields for flexible daily tracking
+- **Client-Side Storage**: Browser localStorage for persistent data storage
+- **Import/Export**: JSON file import/export functionality for data backup and sharing
+- **Data Structure**: Topics with id, name, unit, and data object containing date-value pairs
+- **Filename Format**: JSON exports include datetime in format "heatmap-data-DDMMYYHHMM.json"
 
-## Authentication and Authorization
-- **Current State**: No authentication implemented (open application)
-- **Session Management**: Basic Express session configuration present but not actively used
-- **Future Ready**: Infrastructure in place for adding authentication layers
-
-## API Structure
-- **GET /api/topics**: Retrieve all topics
-- **GET /api/topics/:id**: Retrieve specific topic
-- **POST /api/topics**: Create new topic with validation
-- **PATCH /api/topics/:id**: Update topic data (daily entries)
-- **DELETE /api/topics/:id**: Delete topic (endpoint prepared)
-
-The API follows REST conventions with proper HTTP status codes and error handling. All endpoints include validation and error responses.
+## Deployment Architecture
+- **Platform**: Vercel static site hosting
+- **Build Process**: Vite builds the React application to static files
+- **Configuration**: vercel.json configured for SPA routing with catch-all rewrites
+- **No Backend Required**: Completely client-side application with no server dependencies
 
 # External Dependencies
 
-## Database and ORM
-- **@neondatabase/serverless**: Neon PostgreSQL serverless driver for production database connectivity
-- **drizzle-orm**: Modern TypeScript ORM for database operations and query building
-- **drizzle-kit**: Development tools for schema migrations and database management
+## Deployment and Build Tools
+- **vercel**: Static site hosting platform optimized for frontend frameworks
+- **vite**: Fast build tool and development server for production builds
 
 ## UI and Styling
 - **@radix-ui/***: Comprehensive set of unstyled, accessible UI primitives for building the component library
@@ -57,10 +42,10 @@ The API follows REST conventions with proper HTTP status codes and error handlin
 - **class-variance-authority**: Type-safe variant API for component styling
 - **clsx**: Utility for constructing className strings conditionally
 
-## Data Fetching and Forms
-- **@tanstack/react-query**: Powerful data synchronization for React applications
+## Forms and Validation
 - **react-hook-form**: Performant forms library with easy validation
 - **@hookform/resolvers**: Resolver library for integrating Zod validation with react-hook-form
+- **Client-side Storage**: Direct localStorage operations replace API calls
 
 ## Data Visualization
 - **d3**: Industry-standard library for creating data-driven visualizations
@@ -76,3 +61,29 @@ The API follows REST conventions with proper HTTP status codes and error handlin
 - **zod**: TypeScript-first schema validation library
 - **cmdk**: Command palette component for enhanced UX
 - **html2canvas**: Library for taking screenshots of heatmaps (export functionality)
+
+# Vercel Deployment Instructions
+
+## Deployment Steps
+1. **Push to GitHub**: Commit all changes and push to a GitHub repository
+2. **Connect to Vercel**: Import the repository in Vercel dashboard
+3. **Configure Build**: Vercel will automatically detect the configuration from `vercel.json`
+4. **Deploy**: Vercel will build and deploy the application automatically
+
+## Build Configuration
+- **Build Command**: `npm run build` (builds the client-side application)
+- **Output Directory**: `dist/public` (contains the built static files)
+- **Framework**: Vite (automatically detected)
+- **SPA Routing**: Configured with catch-all rewrites for client-side routing
+
+## Local Development
+Since the application is now client-only, you can run it locally using:
+```bash
+cd client && npx vite --host 0.0.0.0 --port 5000
+```
+
+## Features Optimized for Vercel
+- **No Server Dependencies**: Pure client-side application
+- **localStorage Persistence**: Data persists in browser without backend
+- **JSON Import/Export**: Backup and restore data through file downloads
+- **Static Hosting**: Perfect for Vercel's edge network delivery

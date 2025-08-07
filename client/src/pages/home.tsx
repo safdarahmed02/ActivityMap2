@@ -1,99 +1,115 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Download, Plus, Upload, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Topic } from "@shared/schema";
 import Heatmap from "@/components/heatmap";
 import Sidebar from "@/components/sidebar";
 import { AddTopicModal, EditEntryModal } from "@/components/modals";
+import { clientStorage } from "@/lib/localStorage";
 
 export default function Home() {
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [currentTopicId, setCurrentTopicId] = useState<string>("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editEntry, setEditEntry] = useState<{ date: string; value: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Fetch all topics
-  const { data: topics = [], isLoading } = useQuery<Topic[]>({
-    queryKey: ["/api/topics"],
-  });
-
-  // Set default topic when topics load
+  // Load topics from localStorage on component mount
   useEffect(() => {
-    if (topics.length > 0 && !currentTopicId) {
-      setCurrentTopicId(topics[0].id);
+    const loadTopics = async () => {
+      try {
+        const loadedTopics = await clientStorage.getAllTopics();
+        setTopics(loadedTopics);
+        if (loadedTopics.length > 0 && !currentTopicId) {
+          setCurrentTopicId(loadedTopics[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to load topics:', error);
+        toast({ title: "Failed to load topics", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTopics();
+  }, [currentTopicId, toast]);
+
+  const refreshTopics = async () => {
+    try {
+      const loadedTopics = await clientStorage.getAllTopics();
+      setTopics(loadedTopics);
+    } catch (error) {
+      console.error('Failed to refresh topics:', error);
     }
-  }, [topics, currentTopicId]);
-
-  // Update topic mutation
-  const updateTopicMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await apiRequest("PATCH", `/api/topics/${id}`, { data });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
-      toast({ title: "Entry updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update entry", variant: "destructive" });
-    },
-  });
-
-  // Delete topic mutation
-  const deleteTopicMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/topics/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
-      toast({ title: "Topic deleted successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to delete topic", variant: "destructive" });
-    },
-  });
-
-  // Import data mutation
-  const importDataMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      const response = await fetch('/api/import', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error('Import failed');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
-      toast({ title: `Successfully imported ${data.topics.length} topics` });
-      // Set first topic as current if any exist
-      if (data.topics.length > 0) {
-        setCurrentTopicId(data.topics[0].id);
-      }
-    },
-    onError: () => {
-      toast({ title: "Failed to import data", variant: "destructive" });
-    },
-  });
+  };
 
   const currentTopic = topics.find(t => t.id === currentTopicId);
+
+  const handleCreateTopic = async (topicData: { name: string; unit: string }) => {
+    try {
+      const newTopic = await clientStorage.createTopic({
+        name: topicData.name,
+        unit: topicData.unit,
+        data: {}
+      });
+      await refreshTopics();
+      setCurrentTopicId(newTopic.id);
+      toast({ title: "Topic created successfully" });
+      return newTopic;
+    } catch (error) {
+      console.error('Failed to create topic:', error);
+      toast({ title: "Failed to create topic", variant: "destructive" });
+      throw error;
+    }
+  };
+
+  const handleUpdateTopic = async (id: string, data: any) => {
+    try {
+      await clientStorage.updateTopic(id, { data });
+      await refreshTopics();
+      toast({ title: "Entry updated successfully" });
+    } catch (error) {
+      console.error('Failed to update topic:', error);
+      toast({ title: "Failed to update entry", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteTopic = async (topicId: string) => {
+    if (topics.length <= 1) {
+      toast({ title: "Cannot delete the last topic", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      await clientStorage.deleteTopic(topicId);
+      
+      if (topicId === currentTopicId) {
+        // Switch to another topic before deleting
+        const remainingTopics = topics.filter(t => t.id !== topicId);
+        if (remainingTopics.length > 0) {
+          setCurrentTopicId(remainingTopics[0].id);
+        }
+      }
+      
+      await refreshTopics();
+      toast({ title: "Topic deleted successfully" });
+    } catch (error) {
+      console.error('Failed to delete topic:', error);
+      toast({ title: "Failed to delete topic", variant: "destructive" });
+    }
+  };
 
   const handleEntryEdit = (date: string, currentValue: number) => {
     setEditEntry({ date, value: currentValue });
     setShowEditModal(true);
   };
 
-  const handleEntrySave = (date: string, value: number) => {
+  const handleEntrySave = async (date: string, value: number) => {
     if (!currentTopic) return;
 
     const currentData = currentTopic.data as Record<string, number> || {};
@@ -104,12 +120,12 @@ export default function Home() {
       newData[date] = value;
     }
 
-    updateTopicMutation.mutate({ id: currentTopic.id, data: newData });
+    await handleUpdateTopic(currentTopic.id, newData);
     setShowEditModal(false);
     setEditEntry(null);
   };
 
-  const handleQuickAdd = (date: string, value: number) => {
+  const handleQuickAdd = async (date: string, value: number) => {
     if (!currentTopic) return;
 
     const currentData = currentTopic.data as Record<string, number> || {};
@@ -120,33 +136,12 @@ export default function Home() {
       newData[date] = value;
     }
 
-    updateTopicMutation.mutate({ id: currentTopic.id, data: newData });
-  };
-
-  const handleDeleteTopic = (topicId: string) => {
-    if (topics.length <= 1) {
-      toast({ title: "Cannot delete the last topic", variant: "destructive" });
-      return;
-    }
-    
-    if (topicId === currentTopicId) {
-      // Switch to another topic before deleting
-      const remainingTopic = topics.find(t => t.id !== topicId);
-      if (remainingTopic) {
-        setCurrentTopicId(remainingTopic.id);
-      }
-    }
-    
-    deleteTopicMutation.mutate(topicId);
+    await handleUpdateTopic(currentTopic.id, newData);
   };
 
   const handleDownloadJSON = async () => {
     try {
-      const response = await fetch('/api/export');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
+      const exportData = await clientStorage.exportData();
       
       // Generate datetime filename: heatmap-data-DDMMYYHHMM.json
       const now = new Date();
@@ -157,11 +152,17 @@ export default function Home() {
       const minute = String(now.getMinutes()).padStart(2, '0');
       const datetime = `${day}${month}${year}${hour}${minute}`;
       
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
       link.download = `heatmap-data-${datetime}.json`;
       link.click();
       window.URL.revokeObjectURL(url);
+      
       toast({ title: "Data exported successfully" });
     } catch (error) {
+      console.error('Failed to export data:', error);
       toast({ title: "Failed to export data", variant: "destructive" });
     }
   };
@@ -170,16 +171,34 @@ export default function Home() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'application/json') {
-      importDataMutation.mutate(file);
-    } else {
+    if (!file || file.type !== 'application/json') {
       toast({ title: "Please select a valid JSON file", variant: "destructive" });
+      return;
     }
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+
+    try {
+      const text = await file.text();
+      const importedTopics: Topic[] = JSON.parse(text);
+      
+      const result = await clientStorage.importData(importedTopics);
+      await refreshTopics();
+      
+      toast({ title: `Successfully imported ${result.topics.length} topics` });
+      
+      // Set first topic as current if any exist
+      if (result.topics.length > 0) {
+        setCurrentTopicId(result.topics[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to import data:', error);
+      toast({ title: "Failed to import data", variant: "destructive" });
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -288,6 +307,7 @@ export default function Home() {
           setCurrentTopicId(topicId);
           setShowAddModal(false);
         }}
+        onCreateTopic={handleCreateTopic}
       />
 
       <EditEntryModal
