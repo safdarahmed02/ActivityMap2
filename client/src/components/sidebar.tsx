@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ interface SidebarProps {
   currentTopicId: string;
   onTopicSelect: (topicId: string) => void;
   onAddTopic: () => void;
+  onDeleteTopic: (topicId: string) => void;
   onQuickAdd: (date: string, value: number) => void;
   currentTopic?: Topic;
 }
@@ -19,6 +20,7 @@ export default function Sidebar({
   currentTopicId,
   onTopicSelect,
   onAddTopic,
+  onDeleteTopic,
   onQuickAdd,
   currentTopic
 }: SidebarProps) {
@@ -65,25 +67,37 @@ export default function Sidebar({
             return (
               <div
                 key={topic.id}
-                className={`p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`p-3 rounded-lg hover:bg-gray-100 transition-colors ${
                   isActive 
                     ? 'bg-emerald-50 border border-emerald-200' 
                     : 'bg-gray-50 border border-gray-200'
-                }`}
-                onClick={() => onTopicSelect(topic.id)}
+                } group`}
               >
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => onTopicSelect(topic.id)}
+                  >
                     <h3 className="font-medium text-gray-900">{topic.name}</h3>
                     <p className="text-sm text-gray-600">{topic.unit}</p>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-sm font-medium ${
-                      isActive ? 'text-emerald-700' : 'text-gray-700'
-                    }`}>
-                      {weekTotal}{topic.unit.charAt(0)}
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className={`text-sm font-medium ${
+                        isActive ? 'text-emerald-700' : 'text-gray-700'
+                      }`}>
+                        {weekTotal}{topic.unit.charAt(0)}
+                      </div>
+                      <div className="text-xs text-gray-500">this week</div>
                     </div>
-                    <div className="text-xs text-gray-500">this week</div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onDeleteTopic(topic.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               </div>

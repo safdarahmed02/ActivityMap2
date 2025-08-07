@@ -44,6 +44,20 @@ export default function Home() {
     },
   });
 
+  // Delete topic mutation
+  const deleteTopicMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/topics/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
+      toast({ title: "Topic deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete topic", variant: "destructive" });
+    },
+  });
+
   const currentTopic = topics.find(t => t.id === currentTopicId);
 
   const handleEntryEdit = (date: string, currentValue: number) => {
@@ -79,6 +93,23 @@ export default function Home() {
     }
 
     updateTopicMutation.mutate({ id: currentTopic.id, data: newData });
+  };
+
+  const handleDeleteTopic = (topicId: string) => {
+    if (topics.length <= 1) {
+      toast({ title: "Cannot delete the last topic", variant: "destructive" });
+      return;
+    }
+    
+    if (topicId === currentTopicId) {
+      // Switch to another topic before deleting
+      const remainingTopic = topics.find(t => t.id !== topicId);
+      if (remainingTopic) {
+        setCurrentTopicId(remainingTopic.id);
+      }
+    }
+    
+    deleteTopicMutation.mutate(topicId);
   };
 
   const handleDownload = () => {
@@ -128,6 +159,7 @@ export default function Home() {
           currentTopicId={currentTopicId}
           onTopicSelect={setCurrentTopicId}
           onAddTopic={() => setShowAddModal(true)}
+          onDeleteTopic={handleDeleteTopic}
           onQuickAdd={handleQuickAdd}
           currentTopic={currentTopic}
         />
