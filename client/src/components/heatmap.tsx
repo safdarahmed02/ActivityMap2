@@ -112,13 +112,13 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
 
   const getHeatmapClass = (level: number): string => {
     switch (level) {
-      case 0: return 'bg-gray-100 border border-gray-200';
-      case 1: return 'bg-red-100 border border-red-200';
-      case 2: return 'bg-red-200 border border-red-300';
-      case 3: return 'bg-red-400 border border-red-500';
-      case 4: return 'bg-red-500 border border-red-600';
-      case 5: return 'bg-red-600 border border-red-700';
-      default: return 'bg-gray-100 border border-gray-200';
+      case 0: return 'bg-muted/30 border border-border';
+      case 1: return 'bg-red-900/40 border border-red-800';
+      case 2: return 'bg-red-800/60 border border-red-700';
+      case 3: return 'bg-red-700/70 border border-red-600';
+      case 4: return 'bg-red-600/80 border border-red-500';
+      case 5: return 'bg-red-500/90 border border-red-400';
+      default: return 'bg-muted/30 border border-border';
     }
   };
 
@@ -147,12 +147,12 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{topic.name} Progress</h2>
-            <p className="text-gray-600">Track your daily {topic.name.toLowerCase()} {topic.unit}</p>
+            <h2 className="text-xl font-bold text-foreground">{topic.name} Progress</h2>
+            <p className="text-muted-foreground">Track your daily {topic.name.toLowerCase()} {topic.unit}</p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-emerald-600">{stats.todayValue}{topic.unit.charAt(0)}</div>
-            <div className="text-sm text-gray-500">today</div>
+            <div className="text-2xl font-bold text-primary">{stats.todayValue}{topic.unit.charAt(0)}</div>
+            <div className="text-sm text-muted-foreground">today</div>
           </div>
         </div>
       </div>
@@ -160,18 +160,18 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
       {/* Legend */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             <span>{stats.totalThisYear} contributions</span> in total
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Less</span>
             <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-sm bg-gray-100 border border-gray-200"></div>
-              <div className="w-3 h-3 rounded-sm bg-red-100 border border-red-200"></div>
-              <div className="w-3 h-3 rounded-sm bg-red-200 border border-red-300"></div>
-              <div className="w-3 h-3 rounded-sm bg-red-400 border border-red-500"></div>
-              <div className="w-3 h-3 rounded-sm bg-red-500 border border-red-600"></div>
-              <div className="w-3 h-3 rounded-sm bg-red-600 border border-red-700"></div>
+              <div className="w-3 h-3 rounded-sm bg-muted/30 border border-border"></div>
+              <div className="w-3 h-3 rounded-sm bg-red-900/40 border border-red-800"></div>
+              <div className="w-3 h-3 rounded-sm bg-red-800/60 border border-red-700"></div>
+              <div className="w-3 h-3 rounded-sm bg-red-700/70 border border-red-600"></div>
+              <div className="w-3 h-3 rounded-sm bg-red-600/80 border border-red-500"></div>
+              <div className="w-3 h-3 rounded-sm bg-red-500/90 border border-red-400"></div>
             </div>
             <span>More</span>
           </div>
@@ -179,20 +179,20 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
       </div>
 
       {/* Heatmap Container */}
-      <Card className="bg-gray-900 rounded-xl border border-gray-700 p-6 mb-6 relative" id="heatmapContainer">
+      <Card className="bg-card rounded-xl border border-border p-6 mb-6 relative" id="heatmapContainer">
         <CardContent className="p-0">
           <div className="space-y-6">
             {yearlyData.map((yearData) => (
               <div key={yearData.year} className="space-y-2">
                 {/* Year Label */}
-                <div className="text-xs text-gray-400 font-medium">
+                <div className="text-xs text-muted-foreground font-medium">
                   {yearData.year}
                 </div>
                 
                 {/* Year Grid */}
                 <div className="flex gap-2">
                   {/* Day Labels */}
-                  <div className="flex flex-col gap-1 text-xs text-gray-400 font-medium mr-2 mt-4">
+                  <div className="flex flex-col gap-1 text-xs text-muted-foreground font-medium mr-2 mt-4">
                     <div className="h-3 text-center">Mon</div>
                     <div className="h-3"></div>
                     <div className="h-3 text-center">Wed</div>
@@ -204,7 +204,7 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
                   
                   <div className="flex-1">
                     {/* Month Headers */}
-                    <div className="grid grid-cols-12 gap-2 mb-2 text-xs text-gray-400 font-medium">
+                    <div className="grid grid-cols-12 gap-2 mb-2 text-xs text-muted-foreground font-medium">
                       {yearData.months.map((month) => (
                         <div key={month.month} className="text-center">{month.name}</div>
                       ))}
@@ -238,7 +238,7 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
         {/* Tooltip */}
         {tooltip && (
           <div
-            className="fixed z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg pointer-events-none"
+            className="fixed z-50 px-2 py-1 text-xs text-foreground bg-popover border border-border rounded shadow-lg pointer-events-none"
             style={{
               left: tooltip.x,
               top: tooltip.y,
@@ -252,28 +252,28 @@ export default function Heatmap({ topic, onEntryEdit }: HeatmapProps) {
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-card border border-border">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.totalThisYear}</div>
-            <div className="text-sm text-gray-600">Total this year</div>
+            <div className="text-2xl font-bold text-foreground">{stats.totalThisYear}</div>
+            <div className="text-sm text-muted-foreground">Total this year</div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-card border border-border">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.thisWeek}</div>
-            <div className="text-sm text-gray-600">This week</div>
+            <div className="text-2xl font-bold text-foreground">{stats.thisWeek}</div>
+            <div className="text-sm text-muted-foreground">This week</div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-card border border-border">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.todayValue}</div>
-            <div className="text-sm text-gray-600">Today</div>
+            <div className="text-2xl font-bold text-foreground">{stats.todayValue}</div>
+            <div className="text-sm text-muted-foreground">Today</div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-card border border-border">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-gray-900">{stats.streak}</div>
-            <div className="text-sm text-gray-600">Current streak</div>
+            <div className="text-2xl font-bold text-foreground">{stats.streak}</div>
+            <div className="text-sm text-muted-foreground">Current streak</div>
           </CardContent>
         </Card>
       </div>

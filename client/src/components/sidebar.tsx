@@ -46,14 +46,14 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
+    <aside className="w-80 bg-card border-r border-border flex flex-col">
+      <div className="p-6 border-b border-border">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Topics</h2>
+          <h2 className="text-lg font-semibold text-foreground">Topics</h2>
           <Button
             onClick={onAddTopic}
             size="sm"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white p-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground p-2"
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -67,10 +67,10 @@ export default function Sidebar({
             return (
               <div
                 key={topic.id}
-                className={`p-3 rounded-lg hover:bg-gray-100 transition-colors ${
+                className={`p-3 rounded-lg hover:bg-accent transition-colors ${
                   isActive 
-                    ? 'bg-emerald-50 border border-emerald-200' 
-                    : 'bg-gray-50 border border-gray-200'
+                    ? 'bg-primary/10 border border-primary/20' 
+                    : 'bg-muted border border-border'
                 } group`}
               >
                 <div className="flex justify-between items-start">
@@ -78,22 +78,22 @@ export default function Sidebar({
                     className="flex-1 cursor-pointer" 
                     onClick={() => onTopicSelect(topic.id)}
                   >
-                    <h3 className="font-medium text-gray-900">{topic.name}</h3>
-                    <p className="text-sm text-gray-600">{topic.unit}</p>
+                    <h3 className="font-medium text-foreground">{topic.name}</h3>
+                    <p className="text-sm text-muted-foreground">{topic.unit}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className={`text-sm font-medium ${
-                        isActive ? 'text-emerald-700' : 'text-gray-700'
+                        isActive ? 'text-primary' : 'text-foreground'
                       }`}>
                         {weekTotal}{topic.unit.charAt(0)}
                       </div>
-                      <div className="text-xs text-gray-500">this week</div>
+                      <div className="text-xs text-muted-foreground">this week</div>
                     </div>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => onDeleteTopic(topic.id)}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -108,10 +108,10 @@ export default function Sidebar({
       
       {currentTopic && (
         <div className="p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Add</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Quick Add</h3>
           <div className="space-y-3">
             <div>
-              <Label htmlFor="quickValue" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="quickValue" className="text-sm font-medium text-foreground">
                 Value ({currentTopic.unit})
               </Label>
               <Input
@@ -122,10 +122,11 @@ export default function Sidebar({
                 placeholder="0"
                 min="0"
                 step="0.1"
+                className="bg-input border-border"
               />
             </div>
             <div>
-              <Label htmlFor="quickDate" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="quickDate" className="text-sm font-medium text-foreground">
                 Date
               </Label>
               <Input
@@ -133,11 +134,12 @@ export default function Sidebar({
                 type="date"
                 value={quickDate}
                 onChange={(e) => setQuickDate(e.target.value)}
+                className="bg-input border-border"
               />
             </div>
             <Button
               onClick={handleQuickSubmit}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={!quickValue || isNaN(parseFloat(quickValue))}
             >
               Add Entry

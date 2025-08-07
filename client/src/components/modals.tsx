@@ -54,28 +54,30 @@ export function AddTopicModal({ isOpen, onClose, onSuccess }: AddTopicModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
-          <DialogTitle>Add New Topic</DialogTitle>
+          <DialogTitle className="text-foreground">Add New Topic</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="topicName">Topic Name</Label>
+            <Label htmlFor="topicName" className="text-foreground">Topic Name</Label>
             <Input
               id="topicName"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Meditation, Writing"
+              className="bg-input border-border text-foreground"
               required
             />
           </div>
           <div>
-            <Label htmlFor="unit">Unit of Measurement</Label>
+            <Label htmlFor="unit" className="text-foreground">Unit of Measurement</Label>
             <Input
               id="unit"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="e.g., hours, minutes, pages, reps"
+              className="bg-input border-border text-foreground"
               required
             />
           </div>
@@ -85,7 +87,7 @@ export function AddTopicModal({ isOpen, onClose, onSuccess }: AddTopicModalProps
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={createTopicMutation.isPending || !name.trim() || !unit.trim()}
             >
               {createTopicMutation.isPending ? "Creating..." : "Create Topic"}
@@ -133,23 +135,23 @@ export function EditEntryModal({ isOpen, onClose, entry, onSave }: EditEntryModa
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
-          <DialogTitle>Edit Entry</DialogTitle>
+          <DialogTitle className="text-foreground">Edit Entry</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="entryDate">Date</Label>
+            <Label htmlFor="entryDate" className="text-foreground">Date</Label>
             <Input
               id="entryDate"
               type="date"
               value={entry.date}
               readOnly
-              className="bg-gray-50"
+              className="bg-muted border-border text-foreground"
             />
           </div>
           <div>
-            <Label htmlFor="entryValue">Value</Label>
+            <Label htmlFor="entryValue" className="text-foreground">Value</Label>
             <Input
               id="entryValue"
               type="number"
@@ -158,6 +160,7 @@ export function EditEntryModal({ isOpen, onClose, entry, onSave }: EditEntryModa
               placeholder="0"
               min="0"
               step="0.1"
+              className="bg-input border-border text-foreground"
               required
             />
           </div>
@@ -167,7 +170,7 @@ export function EditEntryModal({ isOpen, onClose, entry, onSave }: EditEntryModa
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={!value || isNaN(parseFloat(value))}
             >
               Save

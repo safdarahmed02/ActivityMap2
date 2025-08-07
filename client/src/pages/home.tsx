@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Upload, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -15,6 +15,7 @@ export default function Home() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editEntry, setEditEntry] = useState<{ date: string; value: number } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Fetch all topics
@@ -55,6 +56,33 @@ export default function Home() {
     },
     onError: () => {
       toast({ title: "Failed to delete topic", variant: "destructive" });
+    },
+  });
+
+  // Import data mutation
+  const importDataMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error('Import failed');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
+      toast({ title: `Successfully imported ${data.topics.length} topics` });
+      // Set first topic as current if any exist
+      if (data.topics.length > 0) {
+        setCurrentTopicId(data.topics[0].id);
+      }
+    },
+    onError: () => {
+      toast({ title: "Failed to import data", variant: "destructive" });
     },
   });
 
@@ -112,6 +140,39 @@ export default function Home() {
     deleteTopicMutation.mutate(topicId);
   };
 
+  const handleDownloadJSON = async () => {
+    try {
+      const response = await fetch('/api/export');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'heatmap-data.json';
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Data exported successfully" });
+    } catch (error) {
+      toast({ title: "Failed to export data", variant: "destructive" });
+    }
+  };
+
+  const handleUploadJSON = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'application/json') {
+      importDataMutation.mutate(file);
+    } else {
+      toast({ title: "Please select a valid JSON file", variant: "destructive" });
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleDownload = () => {
     const container = document.getElementById('heatmapContainer');
     if (!container) return;
@@ -137,18 +198,35 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-card border-b border-border px-6 py-4">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Heatmap Tracker</h1>
-            <p className="text-gray-600 text-sm">Track your daily progress across different areas</p>
+            <h1 className="text-2xl font-bold text-foreground">Heatmap Tracker</h1>
+            <p className="text-muted-foreground text-sm">Track your daily progress across different areas</p>
           </div>
-          <Button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Download className="w-4 h-4 mr-2" />
-            Download PNG
-          </Button>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".json"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <Button onClick={handleUploadJSON} variant="outline" size="sm">
+              <Upload className="w-4 h-4 mr-2" />
+              Import JSON
+            </Button>
+            <Button onClick={handleDownloadJSON} variant="outline" size="sm">
+              <FileDown className="w-4 h-4 mr-2" />
+              Export JSON
+            </Button>
+            <Button onClick={handleDownload} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Download className="w-4 h-4 mr-2" />
+              Download PNG
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -167,11 +245,26 @@ export default function Home() {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto">
           <div className="max-w-6xl mx-auto">
-            {currentTopic && (
+            {currentTopic ? (
               <Heatmap
                 topic={currentTopic}
                 onEntryEdit={handleEntryEdit}
               />
+            ) : (
+              <div className="text-center py-20">
+                <h2 className="text-xl font-semibold text-muted-foreground mb-2">No topics available</h2>
+                <p className="text-muted-foreground mb-4">Import existing data or create your first topic to get started</p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleUploadJSON} variant="outline">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import Data
+                  </Button>
+                  <Button onClick={() => setShowAddModal(true)} className="bg-primary hover:bg-primary/90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Topic
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </main>
